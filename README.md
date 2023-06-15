@@ -1,2 +1,2 @@
 # authentication-form
-This repository consists functionalities of basic sign in and signup form.
+This repository provides functionalities of basic sign in and signup form.
