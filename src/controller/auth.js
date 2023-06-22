@@ -2,44 +2,57 @@ import {StatusCodes} from "http-status-codes";
 import User from '../models/User.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from "bcrypt";
-import shortid from 'shortid';
 
 
 export const signUp = async (req, res) => {
-    console.log("Inside Sign up");
-    const {firstName, lastName, email, password} = req.body;
-    if (!firstName || !lastName || !email || !password) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "Please Provide Required Information",
-        });
-    }
 
-    const hash_password = await bcrypt.hash(password, 10);
+    try {
+        const {firstName, lastName, email, password} = req.body;
 
-    const userData = {
-        firstName,
-        lastName,
-        email,
-        hash_password,
-    };
+        if (!firstName || !lastName || !email || !password) {
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "Please Provide Required Information",
+            });
+        }
 
-    const user = await User.findOne({email});
-    if (user) {
-        return res.status(StatusCodes.BAD_REQUEST).json({
-            message: "User already registered",
-        });
-    } else {
-        User.create(userData).then((data, err) => {
-            if (err) res.status(StatusCodes.BAD_REQUEST).json({err});
-            else
-                res
-                    .status(StatusCodes.CREATED)
-                    .json({message: "User created Successfully"});
-        });
+        const hash_password = await bcrypt.hash(password, 10);
+
+        const userData = {
+            firstName,
+            lastName,
+            email: email.toLowerCase(),
+            hash_password,
+        };
+
+        const user = await User.findOne({email});
+        if (user) {
+
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "User already registered",
+            });
+
+        } else {
+
+            const user = await User.create(userData);
+            user.token = jwt.sign(
+                {
+                    user_id: user.id, email
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: '1h'
+                });
+
+            res.status(201).json(user);
+        }
+    } catch (e) {
+        console.log("Error occurred while signing up:", e);
     }
 };
 
+
 export const signIn = async (req, res) => {
+
     try {
         if (!req.body.email || !req.body.password) {
             res.status(StatusCodes.BAD_REQUEST).json({
@@ -50,20 +63,25 @@ export const signIn = async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
 
         if (user) {
+
             if (await user.authenticate(req.body.password)) {
+
                 const token = jwt.sign(
-                    { _id: user._id, email: user.email },
-                    process.env.JWT_SECRET,{ expiresIn: "30d"});
+                    { user_id: user._id, email: user.email },
+                    process.env.JWT_SECRET,{ expiresIn: "1h"});
 
                 const { _id, firstName, lastName, email } = user;
-                console.log("User authenticated:", email)
+
+                console.log("User authenticated:", email);
+
                 res.status(StatusCodes.OK).json({
                     token,
                     user: { _id, firstName, lastName, email },
                 });
+
             } else {
                 res.status(StatusCodes.UNAUTHORIZED).json({
-                    message: "Something went wrong!",
+                    message: "Something went wrong! Please check the password",
                 });
             }
         } else {

@@ -17,8 +17,11 @@ appRouter.get('/', (req, res) => {
 
 appRouter.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname,'/src/public/views/sign-up.html'))
-})
+});
 
+appRouter.get('/signin', (req, res) => {
+    res.sendFile(path.join(__dirname,'/src/public/views/sign-in.html'))
+})
 export default appRouter;
 
 

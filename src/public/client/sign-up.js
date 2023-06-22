@@ -1,16 +1,12 @@
 let signUpButton = document.getElementById("sign-up-button");
-
-console.log("Script loaded");
+let textArea =  document.getElementById("message");
 
 signUpButton.addEventListener("click", async () => {
-
-    console.log("Button clicked");
 
     let firstName = document.getElementById("firstName").value;
     let lastName = document.getElementById("lastName").value;
     let email = document.getElementById("email").value;
     let password = document.getElementById("password").value;
-
 
     const data = {
         firstName: firstName,
@@ -27,10 +23,16 @@ signUpButton.addEventListener("click", async () => {
         body: JSON.stringify(data)
     };
 
-    const res = await fetch(window.location.origin + '/app/signup',options);
+    fetch(window.location.origin + '/app/signup',options).then((response) => {
+        response.json().then((data) => {
+            if (data.token) {
 
-    await fetch(window.location.origin + '/', {
-        method:'GET'
+                textArea.textContent = "Welcome " + data.firstName;
+            } else {
+                textArea.textContent = data.message;
+            }
+
+        })
     })
 
 
