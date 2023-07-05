@@ -31,7 +31,6 @@ signUpButton.addEventListener("click", async () => {
             } else {
                 textArea.textContent = data.message;
             }
-
         })
     })
 

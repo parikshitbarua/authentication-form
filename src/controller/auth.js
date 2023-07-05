@@ -25,14 +25,12 @@ export const signUp = async (req, res) => {
         };
 
         const user = await User.findOne({email});
-        if (user) {
 
+        if (user) {
             return res.status(StatusCodes.BAD_REQUEST).json({
                 message: "User already registered",
             });
-
         } else {
-
             const user = await User.create(userData);
             user.token = jwt.sign(
                 {
@@ -43,7 +41,7 @@ export const signUp = async (req, res) => {
                     expiresIn: '1h'
                 });
 
-            res.status(201).json(user);
+            return res.status(201).json(user);
         }
     } catch (e) {
         console.log("Error occurred while signing up:", e);
@@ -55,7 +53,7 @@ export const signIn = async (req, res) => {
 
     try {
         if (!req.body.email || !req.body.password) {
-            res.status(StatusCodes.BAD_REQUEST).json({
+            return res.status(StatusCodes.BAD_REQUEST).json({
                 message: "Please enter email and password",
             });
         }
@@ -66,18 +64,11 @@ export const signIn = async (req, res) => {
 
             if (await user.authenticate(req.body.password)) {
 
-                const token = jwt.sign(
+                user.token = jwt.sign(
                     { user_id: user._id, email: user.email },
                     process.env.JWT_SECRET,{ expiresIn: "1h"});
 
-                const { _id, firstName, lastName, email } = user;
-
-                console.log("User authenticated:", email);
-
-                res.status(StatusCodes.OK).json({
-                    token,
-                    user: { _id, firstName, lastName, email },
-                });
+                return res.status(StatusCodes.OK).json(user);
 
             } else {
                 res.status(StatusCodes.UNAUTHORIZED).json({
@@ -85,12 +76,14 @@ export const signIn = async (req, res) => {
                 });
             }
         } else {
-            res.status(StatusCodes.BAD_REQUEST).json({
-                message: "User does not exist..!",
+            return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "User does not exist. Please sign up if you haven't already.",
             });
         }
     } catch (error) {
-        res.status(StatusCodes.BAD_REQUEST).json({ error });
+        return res.status(StatusCodes.BAD_REQUEST).json({
+                message: "Error connecting to the server"
+            });
     }
 };
 

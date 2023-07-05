@@ -1,4 +1,5 @@
 let loginButton = document.getElementById("login-button");
+let textArea = document.getElementById("message");
 
 loginButton.addEventListener("click", async () => {
     let email = document.getElementById("email").value;
@@ -19,5 +20,13 @@ loginButton.addEventListener("click", async () => {
         body: JSON.stringify(data)
     }
 
-    await fetch(window.location.origin + '/app/signin', options);
+    await fetch(window.location.origin + '/app/signin', options).then((response) => {
+        response.json().then((data) => {
+            if(data.token) {
+                textArea.innerText = `Welcome back, ${data.firstName}`;
+            } else {
+                textArea.innerText = data.message;
+            }
+        });
+    });
 })
